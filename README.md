@@ -9,10 +9,3 @@ dasdsa
 ads
 das
 ds
-
-sda
-ads
-dsa
-
-as
-sd
