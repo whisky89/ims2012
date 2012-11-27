@@ -127,7 +127,7 @@ class GeneratorElMsg : public Event {
   }
 };
 
-int main()
+int main(int argc, char **argv)
 {
   Init(0,200*60); // 200 hodin casovy ramec
   (new WorkingTime)->Activate();
