@@ -46,6 +46,28 @@ class WorkingTime : public Process{
 };
 
 
+class GeneratorWrtMsg : public Event {
+  void Behavior(){
+  //if (pracovni doba)
+	 (new WrittenMessage)->Activate();
+    Activate(Time + Exponential(84));
+  }
+};
+
+class GeneratorDataMsg : public Event {
+  void Behavior(){
+	 (new DataMessage)->Activate();
+    Activate(Time + Exponential(108));
+  }
+};
+
+class GeneratorElMsg : public Event {
+  void Behavior(){
+	 (new ElectronicMessage)->Activate();
+    Activate(Time + Exponential(120));
+  }
+};
+
 class Message : public Process {
   protected:
 //    double inTime; //cas prichodu
@@ -105,27 +127,7 @@ class ElectronicMessage : public Message {
   }
 };
 
-class GeneratorWrtMsg : public Event {
-  void Behavior(){
-  //if (pracovni doba)
-	 (new WrittenMessage)->Activate();
-    Activate(Time + Exponential(84));
-  }
-};
 
-class GeneratorDataMsg : public Event {
-  void Behavior(){
-	 (new DataMessage)->Activate();
-    Activate(Time + Exponential(108));
-  }
-};
-
-class GeneratorElMsg : public Event {
-  void Behavior(){
-	 (new ElectronicMessage)->Activate();
-    Activate(Time + Exponential(120));
-  }
-};
 
 int main(int argc, char **argv)
 {
