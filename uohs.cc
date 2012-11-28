@@ -63,26 +63,24 @@ class Message : public Process {
   protected:
     void Behavior(){
       double percent;
-      if(Random()<=0.50){
-        if(assistent1.Busy() && !assistent2.Busy()){
-          //aby druhy z asistentu nezahalel
+      if(assistent1.QueueLen() < assistent2.QueueLen()){
+        Seize(assistent1);
+        Wait(Exponential(2*60));
+        Release(assistent1);
+      } else if(assistent1.QueueLen() > assistent2.QueueLen()){
+        Seize(assistent2);
+        Wait(Exponential(2*60));
+        Release(assistent2);
+      } else {
+        if(Random()<=0.50) {
           Seize(assistent2);
           Wait(Exponential(2*60));
           Release(assistent2);
-        }else{
+        } else {
           Seize(assistent1);
           Wait(Exponential(2*60));
           Release(assistent1);
-        }
-      }else{
-        if(assistent2.Busy() && !assistent1.Busy()){
-          Seize(assistent1);
-          Wait(Exponential(2*60));
-          Release(assistent1);
-        }else{
-          Seize(assistent2);
-          Wait(Exponential(2*60));
-          Release(assistent2);
+          
         }
       }
       // TODO: vyresit problem pracovni doby 
