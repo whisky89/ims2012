@@ -87,6 +87,7 @@ class Message : public Process {
       }
       // TODO: vyresit problem pracovni doby 
       //vyrizovani viceprezidentem
+      vicePresWork.SetName("viceprazidentova fronta");
       vicePresWork.Insert(this);
       Wait(Exponential(4*480)); //4 dny
       
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
   filingOffice.Output();
   assistent1.Output();
   assistent2.Output();
-  vicePresident.Output();
+//  vicePresident.Output();
   vicePresWork.Output();
   Print("verejne zakazky %d\n",verejne);
   Print("hosp. soutez %d\n",soutez);
