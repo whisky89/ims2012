@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
- 
+#include <iostream> 
 
 
 Queue vicePresWork;
@@ -93,65 +93,77 @@ class Message : public Process {
       vicePresWork.SetName("fronta mistopredsedkyne");
       vicePresWork.Insert(this);
       Wait(Exponential(4*24*60)); //4 dny
-      Print("LALA\n");
-      archive.SetName("Archiv uzavrenych pripadu");
+      //Print("LALA\n");
+      //archive.SetName("Archiv uzavrenych pripadu");
       //prideleni spisu na dany odbor
       percent = Random();
       if(percent <= 0.07){
+//        std::cout << "1" << std::endl;
         //Odbor druhostupnoveho rozhodovani 7%
-        rozh++;
+        //rozh++;
         //TODO: REDITELOVA PRACE
-        Wait(Exponential(21*60)); //cca 21 dni kolobeh zpracovani zprav
+        //Wait(Exponential(21*60)); //cca 21 dni kolobeh zpracovani zprav
         //TODO: DELBA PRACE
 //        archive.Insert(this);
-      }
-      else if(percent <= 0.17){
-        //verejna podpora 10%
-//        Print("podpora\n");
-        podpora++;
-        Print("108\n");
-        if(assistent2.Busy()){
-          queueAssisten2.InsFirst(this);
-          Passivate();
-        }
-        Seize(assistent2,15);
+
+        Wait(60*21*24);
+        Seize(assistent2,1);
         Wait(Exponential(2*60));
 //        archive.Insert(this);
         Release(assistent2);
       }
-//      else if(percent <= 0.29){
+      else if(percent <= 0.17){
+//        std::cout << "2" << std::endl;
+        //verejna podpora 10%
+//        Print("podpora\n");
+        //podpora++;
+        Wait(60*21*24);
+        Seize(assistent2,1);
+        Wait(Exponential(2*60));
+//        archive.Insert(this);
+        Release(assistent2);
+      }
+      else if(percent <= 0.29){
+
+//        std::cout << "3" << std::endl;
 //        //ekonomicky odbor 12%
 ////        Print("eko\n");
 //        eko++;
 //        Print("118\n");
-//        Seize(assistent1);
-//        Wait(Exponential(2*60));
+        Wait(60*21*24);
+        Seize(assistent1,1);
+        Wait(Exponential(2*60));
 ////        archive.Insert(this);
-//        Release(assistent1);
-//      }
-//      else if(percent <= 0.51){
+        Release(assistent1);
+      }
+      else if(percent <= 0.51){
+
+//        std::cout << "4" << std::endl;
 //        //hospodarska soutez 22%
 ////        Print("soutez\n");
 //        soutez++;
 //        Print("128\n");
 //        Print("beru asistenta\n");
-//        Seize(assistent1);     
-//        Wait(Exponential(2*60));
+        Wait(60*21*24);
+        Seize(assistent2,1);     
+        Wait(Exponential(2*60));
 ////        archive.Insert(this);
-//        Release(assistent1);
+        Release(assistent2);
 //        Print("uvolneni asistenta\n");
-//      }
-//      else{
+      }
+      else{
+//        std::cout << "5" << std::endl;
 //        //verejne zakazky 49%
 //        verejne++;
 //        Print("137\n");
 //        Print("beru asistenta\n");
-//        Seize(assistent1);
-//        Wait(Exponential(2*60));
+        Wait(60*21*24);
+        Seize(assistent1,1);
+        Wait(Exponential(2*60));
 ////        archive.Insert(this);
-//        Release(assistent1);
+        Release(assistent1);
 //        Print("uvolneni asistenta\n");
-//      }     
+      }     
     }
 
 };
@@ -247,18 +259,18 @@ int main(int argc, char **argv)
 //  filingOffice.Output();
 //  assistent1.Output();
 //  assistent2.Output();
-////  vicePresident.Output();
+//  vicePresident.Output();
 //  vicePresWork.Output();
 //  
 //  archive.Output();
   
 //  officersQueue[1][1].Output();
-  
+    
  // Print("verejne zakazky %d\n",verejne);
  // Print("hosp. soutez %d\n",soutez);
  // Print("eko %d\n",eko);
  // Print("podpora %d\n",podpora);
  // Print("rozhodovani %d\n",rozh);
-//  qFilOffice.Output();
+// qFilOffice.Output();
   return 0;
 }
