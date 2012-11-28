@@ -15,7 +15,7 @@ Facility director[5]; //pocet reditelu - na kazdy odbor jeden
 Store officers[5]; //pocet oddeleni (pro kazde oddeleni 8 referentu)
 
 
-Facility isWorkingTime ("Je pracovni doba");
+//Facility isWorkingTime ("Je pracovni doba");
 int verejne=0;
 int soutez=0;
 int podpora=0;
@@ -32,26 +32,26 @@ class WorkingTime : public Process{
   void Behavior(){
     while(1){
       Wait(8*60); //pracovni doba 8hodin
-      Seize(isWorkingTime,3);
+      //Seize(isWorkingTime,3);
       Seize(vicePresident,3);
       
       Enter(filingOffice,2);
       Seize(assistent1,3);
       Seize(assistent2,3);
-      for(int i=0;i<5;i++){
-        Seize(director[i],3);
-        Enter(officers[i],8);
-      }
+      //for(int i=0;i<5;i++){
+      //  Seize(director[i],3);
+      //  Enter(officers[i],8);
+      //}
       Wait(16*60); //nepracuje se
-      Release(isWorkingTime);
+    //  Release(isWorkingTime);
       Release(vicePresident);
       Leave(filingOffice,2);
       Release(assistent1);
       Release(assistent2);
-      for(int i=0;i<5;i++){
-        Release(director[i]);
-        Leave(officers[i],8);
-      }
+      //for(int i=0;i<5;i++){
+      //  Release(director[i]);
+      //  Leave(officers[i],8);
+      //}
     }
   }
 };
@@ -85,7 +85,7 @@ class Message : public Process {
       }
       // TODO: vyresit problem pracovni doby 
       //vyrizovani viceprezidentem
-      vicePresWork.SetName("viceprazidentova fronta");
+      vicePresWork.SetName("fronta mistopredsedkyne");
       vicePresWork.Insert(this);
       Wait(Exponential(4*480)); //4 dny
       
@@ -199,11 +199,13 @@ int main(int argc, char **argv)
   assistent2.Output();
 //  vicePresident.Output();
   vicePresWork.Output();
-  Print("verejne zakazky %d\n",verejne);
-  Print("hosp. soutez %d\n",soutez);
-  Print("eko %d\n",eko);
-  Print("podpora %d\n",podpora);
-  Print("rozhodovani %d\n",rozh);
+  
+  
+ // Print("verejne zakazky %d\n",verejne);
+ // Print("hosp. soutez %d\n",soutez);
+ // Print("eko %d\n",eko);
+ // Print("podpora %d\n",podpora);
+ // Print("rozhodovani %d\n",rozh);
 //  qFilOffice.Output();
   return 0;
 }
