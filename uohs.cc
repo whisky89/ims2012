@@ -7,8 +7,6 @@
 
 
 Queue vicePresWork;
-Queue queueAssisten1;
-Queue queueAssisten2;
 
 Store filingOffice("Podatelna", 2);   //pracovnici na podatelne
 Facility assistent1("Asistent 1"); //prvni asistent ,queueAssisten1
@@ -18,7 +16,8 @@ Facility director[5]; //pocet reditelu - na kazdy odbor jeden
 Store officers[5]; //pocet oddeleni (pro kazde oddeleni 8 referentu)
 
 
-//Facility isWorkingTime ("Je pracovni doba");
+Facility isWorkingTime ("Je pracovni doba");
+int cnt=0;
 int verejne=0;
 int soutez=0;
 int podpora=0;
@@ -33,12 +32,13 @@ int rozh=0;
 
 class WorkingTime : public Process{
   void Behavior(){
+    Priority=3;
     while(1){
       Wait(8*60); //pracovni doba 8hodin
-      //Seize(isWorkingTime,3);
-      Seize(vicePresident,3);
-      
+      Seize(isWorkingTime,3);
+      Seize(vicePresident,3);     
       Enter(filingOffice,2);
+//      Enter(filingOffice,1);
       Seize(assistent1,3);
       Seize(assistent2,3);
       //for(int i=0;i<5;i++){
@@ -46,9 +46,10 @@ class WorkingTime : public Process{
       //  Enter(officers[i],8);
       //}
       Wait(16*60); //nepracuje se
-    //  Release(isWorkingTime);
+      Release(isWorkingTime);
       Release(vicePresident);
       Leave(filingOffice,2);
+      
       Release(assistent1);
       Release(assistent2);
       //for(int i=0;i<5;i++){
@@ -95,14 +96,19 @@ class Message : public Process {
         //Odbor druhostupnoveho rozhodovani 7%
         //rozh++;
         //TODO: REDITELOVA PRACE
-        //TODO: DELBA PRACE
 //        archive.Insert(this);
 
         Wait(60*21*24);//cca 21 dni kolobeh zpracovani zprav
-//        Seize(assistent2,1);
-//        Wait(Exponential(2*60));
-//        archive.Insert(this);
-//        Release(assistent2);
+        
+        if(assistent1.QueueLen() < assistent2.QueueLen()){
+          Seize(assistent1);
+          Wait(Exponential(2*60));
+          Release(assistent1);
+        } else if(assistent1.QueueLen() >= assistent2.QueueLen()){
+          Seize(assistent2);
+          Wait(Exponential(2*60));
+          Release(assistent2);
+        }
       }
       else if(percent <= 0.17){
         //verejna podpora 10%
@@ -121,7 +127,6 @@ class Message : public Process {
         Wait(60*21*24);
         Seize(assistent1,1);
         Wait(Exponential(2*60));
-       
         Release(assistent1);
       }
       else if(percent <= 0.51){
@@ -152,32 +157,55 @@ class Message : public Process {
 
 class WrittenMessage : public Message {
   void Behavior(){
-
-    Enter(filingOffice,1);
-    Wait(Exponential(4*60)); //doba zpracovani
-    Leave (filingOffice,1);
-//    qFilOffice.Insert(this);
-//    Passivate();
-    Message::Behavior();
+    cnt++;
+//    if(!isWorkingTime.Busy()){
+//      Print("\nprijem wrt: ");
+//      Print(Time);
+      Enter(filingOffice,1);
+//      Print("\nprijem wrt: ");
+//      Print(Time);
+      Wait(Exponential(4*60)); //doba zpracovani
+      Leave (filingOffice,1);
+//      Print("\nwrt Zpracovano v: ");
+//      Print(Time);
+      Message::Behavior();
+//    }
   }
 };
 
 class DataMessage : public Message {
   void Behavior(){
-
-    Enter(filingOffice,1);
-    Wait(Exponential(4*60)); //doba zpracovani
-    Leave (filingOffice,1);   
-    Message::Behavior();
-    
+    cnt++;
+//    if(!isWorkingTime.Busy()){
+//      Print("\nprijem data: ");
+//      Print(Time);
+      Enter(filingOffice,1);
+//      Print("\nprijem data: ");
+//      Print(Time);
+      Wait(Exponential(4*60)); //doba zpracovani
+//      Leave (filingOffice,1);   
+//      Print("\ndata Zpracovano v: ");
+//      Print(Time);
+      Message::Behavior();
+//    }
   }
 };
 
 class ElectronicMessage : public Message {
   void Behavior(){
-    Enter(filingOffice,1);
-    Leave (filingOffice,1);
-    Message::Behavior();
+    cnt++;
+//    if(!isWorkingTime.Busy()){
+//      Print("\nprijem elect: ");
+//      Print(Time);
+      Enter(filingOffice,1);
+//      Print("\nprijem elect: ");
+//      Print(Time);
+      Wait(Uniform(15,30)); // prodleva mezi preposlanim asistentovi
+      Leave (filingOffice,1);
+//      Print("\n elect Zpracovano v: ");
+//      Print(Time);
+      Message::Behavior();
+//    }
   }
 };
 
@@ -191,7 +219,7 @@ class GeneratorWrtMsg : public Event {
 class GeneratorDataMsg : public Event {
   void Behavior(){
 	 (new DataMessage)->Activate();
-    Activate(Time + Exponential(108));
+    Activate(Time + Exponential(108)); //108
   }
 };
 
@@ -205,6 +233,7 @@ class GeneratorElMsg : public Event {
 int main(int argc, char **argv)
 {
   Init(0,43829); // mesic behu
+//  Init(0,24*60); //10 hodin behu
 //  Init(0,7*24*60); // tyden behu
 //  std::string ttrf;
   
@@ -240,7 +269,10 @@ int main(int argc, char **argv)
   (new GeneratorDataMsg)->Activate();
   (new GeneratorElMsg)->Activate();
   Run();
-//  filingOffice.Output();
+  
+  
+  filingOffice.Output();
+  Print("prichozich zprav: %d\n",cnt);
 //  assistent1.Output();
 //  assistent2.Output();
 //  vicePresident.Output();
