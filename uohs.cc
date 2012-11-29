@@ -11,9 +11,9 @@ Queue queueAssisten1;
 Queue queueAssisten2;
 
 Store filingOffice("Podatelna", 2);   //pracovnici na podatelne
-Facility assistent1("Asistent 1",queueAssisten1); //prvni asistent
-Facility assistent2("Asistent 2",queueAssisten2); //druhy asistent
-Facility vicePresident ("Mistopredsedkyne",vicePresWork); //,vicePresWork
+Facility assistent1("Asistent 1"); //prvni asistent ,queueAssisten1
+Facility assistent2("Asistent 2"); //druhy asistent ,queueAssisten2
+Facility vicePresident ("Mistopredsedkyne"); //
 Facility director[5]; //pocet reditelu - na kazdy odbor jeden
 Store officers[5]; //pocet oddeleni (pro kazde oddeleni 8 referentu)
 
@@ -26,7 +26,6 @@ int eko=0;
 int rozh=0;
 //Queue qFilOffice; //fronta zpracovanych podnetu z podatelny
 //Queue officersQueue[5][8];
-Queue archive;
 
 /**
  * Denni pracovni doba
@@ -77,7 +76,7 @@ class Message : public Process {
         Release(assistent2);
       } 
       else {
-        if(Random()<=0.50) {
+        if(Random()<0.50) {
           Seize(assistent2);
           Wait(Exponential(2*60));
           Release(assistent2);
@@ -87,83 +86,66 @@ class Message : public Process {
           Release(assistent1);
           
         }
-      }
-      // TODO: vyresit problem pracovni doby 
-      //vyrizovani viceprezidentem
-      vicePresWork.SetName("fronta mistopredsedkyne");
-      vicePresWork.Insert(this);
-      Wait(Exponential(4*24*60)); //4 dny
-      //Print("LALA\n");
-      //archive.SetName("Archiv uzavrenych pripadu");
-      //prideleni spisu na dany odbor
+      }  
+      Seize(vicePresident);
+      Wait(5);
+      Release(vicePresident);
       percent = Random();
       if(percent <= 0.07){
-//        std::cout << "1" << std::endl;
         //Odbor druhostupnoveho rozhodovani 7%
         //rozh++;
         //TODO: REDITELOVA PRACE
-        //Wait(Exponential(21*60)); //cca 21 dni kolobeh zpracovani zprav
         //TODO: DELBA PRACE
 //        archive.Insert(this);
 
-        Wait(60*21*24);
-        Seize(assistent2,1);
-        Wait(Exponential(2*60));
+        Wait(60*21*24);//cca 21 dni kolobeh zpracovani zprav
+//        Seize(assistent2,1);
+//        Wait(Exponential(2*60));
 //        archive.Insert(this);
-        Release(assistent2);
+//        Release(assistent2);
       }
       else if(percent <= 0.17){
-//        std::cout << "2" << std::endl;
         //verejna podpora 10%
 //        Print("podpora\n");
         //podpora++;
         Wait(60*21*24);
         Seize(assistent2,1);
         Wait(Exponential(2*60));
-//        archive.Insert(this);
+        
         Release(assistent2);
       }
       else if(percent <= 0.29){
-
-//        std::cout << "3" << std::endl;
 //        //ekonomicky odbor 12%
 ////        Print("eko\n");
 //        eko++;
-//        Print("118\n");
         Wait(60*21*24);
         Seize(assistent1,1);
         Wait(Exponential(2*60));
-////        archive.Insert(this);
+       
         Release(assistent1);
       }
       else if(percent <= 0.51){
-
-//        std::cout << "4" << std::endl;
 //        //hospodarska soutez 22%
 ////        Print("soutez\n");
 //        soutez++;
-//        Print("128\n");
-//        Print("beru asistenta\n");
+
         Wait(60*21*24);
         Seize(assistent2,1);     
         Wait(Exponential(2*60));
-////        archive.Insert(this);
+      
         Release(assistent2);
 //        Print("uvolneni asistenta\n");
       }
       else{
-//        std::cout << "5" << std::endl;
 //        //verejne zakazky 49%
 //        verejne++;
-//        Print("137\n");
-//        Print("beru asistenta\n");
         Wait(60*21*24);
         Seize(assistent1,1);
         Wait(Exponential(2*60));
-////        archive.Insert(this);
+     
         Release(assistent1);
 //        Print("uvolneni asistenta\n");
-      }     
+      }    
     }
 
 };
@@ -222,9 +204,11 @@ class GeneratorElMsg : public Event {
 
 int main(int argc, char **argv)
 {
-//  Init(0,43829.0639); // mesic behu
-  Init(0,7*24*60); // tyden behu
+  Init(0,43829); // mesic behu
+//  Init(0,7*24*60); // tyden behu
 //  std::string ttrf;
+  
+//  vicePresident ("fronta mistopredsedkyne");
   
   director[0].SetName("Reditel verejnych zakazek");
   director[1].SetName("Reditel hospodarske souteze");
@@ -251,18 +235,17 @@ int main(int argc, char **argv)
 //  }
   
 
-//  (new WorkingTime)->Activate();
+  (new WorkingTime)->Activate();
   (new GeneratorWrtMsg)->Activate();
   (new GeneratorDataMsg)->Activate();
-  (new GeneratorWrtMsg)->Activate();
+  (new GeneratorElMsg)->Activate();
   Run();
 //  filingOffice.Output();
 //  assistent1.Output();
 //  assistent2.Output();
 //  vicePresident.Output();
-//  vicePresWork.Output();
-//  
-//  archive.Output();
+
+
   
 //  officersQueue[1][1].Output();
     
