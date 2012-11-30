@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iostream> 
 
-
+#define rovnomerne
 Queue vicePresWork;
 
 //Store filingOffice("Podatelna", 2);   //pracovnici na podatelne
@@ -32,19 +32,21 @@ int rozh=0;
  * Denni pracovni doba
  */
 
+#ifndef rovnomerne
 class WorkingTime : public Process{
   void Behavior(){
-//    Priority=3;
+    Priority=3;
     while(1){
       Wait(8*60); //pracovni doba 8hodin
       Seize(isWorkingTime,3);
       /** POKUD BUDEME CHTIT ABY PRACOVNIK KROUTIL PRESCASY*/
-      Seize(filingOfficer1); 
-      Seize(filingOfficer2);
+//      Seize(filingOfficer1); 
+//      Seize(filingOfficer2);
       /** PRACOVNIK NESTIHNE VYRIDIT ZAKAZKU = BEHEM PRACE JE PRERUSEN *
+       * nesmi byt nastaveno Priority processu */
       Seize(filingOfficer1,3); 
       Seize(filingOfficer2,3);
-      * ********************************/
+      /* ********************************/
       Seize(vicePresident,3);
       Seize(assistent1,3);
       Seize(assistent2,3);
@@ -67,8 +69,75 @@ class WorkingTime : public Process{
     }
   }
 };
+#endif
 
+#ifdef rovnomerne
+class WorkingTime : public Process{
+  void Behavior(){
+    while(1){
+      if (Random()<0.50){
+        Priority=3;
+        Wait(8*60); //pracovni doba 8hodin
+        Seize(isWorkingTime,3);
+        /** PRACOVNIK NESTIHNE VYRIDIT ZAKAZKU = BEHEM PRACE JE PRERUSEN *
+         * nesmi byt nastaveno Priority processu */
+        Seize(filingOfficer1); 
+        Seize(filingOfficer2);
+        /* ********************************/
+        Seize(vicePresident,3);
+        Seize(assistent1,3);
+        Seize(assistent2,3);
+        //for(int i=0;i<5;i++){
+        //  Seize(director[i],3);
+        //  Enter(officers[i],8);
+        //}
+        Wait(16*60); //nepracuje se
+        Release(isWorkingTime);
 
+        Release(filingOfficer1);
+        Release(filingOfficer2);
+        Release(vicePresident);
+        Release(assistent1);
+        Release(assistent2);
+        //for(int i=0;i<5;i++){
+        //  Release(director[i]);
+        //  Leave(officers[i],8);
+        //}
+      }else{
+        Wait(8*60); //pracovni doba 8hodin
+        Seize(isWorkingTime,3);
+        /** POKUD BUDEME CHTIT ABY PRACOVNIK KROUTIL PRESCASY*/
+        Seize(filingOfficer1,3); 
+        Seize(filingOfficer2,3);
+        /** PRACOVNIK NESTIHNE VYRIDIT ZAKAZKU = BEHEM PRACE JE PRERUSEN *
+         * nesmi byt nastaveno Priority processu */
+//        Seize(filingOfficer1,3); 
+//        Seize(filingOfficer2,3);
+        /* ********************************/
+        Seize(vicePresident,3);
+        Seize(assistent1,3);
+        Seize(assistent2,3);
+        //for(int i=0;i<5;i++){
+        //  Seize(director[i],3);
+        //  Enter(officers[i],8);
+        //}
+        Wait(16*60); //nepracuje se
+        Release(isWorkingTime);
+
+        Release(filingOfficer1);
+        Release(filingOfficer2);
+        Release(vicePresident);
+        Release(assistent1);
+        Release(assistent2);
+        //for(int i=0;i<5;i++){
+        //  Release(director[i]);
+        //  Leave(officers[i],8);
+        //}
+      }
+    }
+  }
+};
+#endif
 
 
 class Message : public Process {
@@ -121,8 +190,7 @@ class Message : public Process {
         //podpora++;
         Wait(60*21*24);
         Seize(assistent2,1);
-        Wait(Exponential(2*60));
-        
+        Wait(Exponential(2*60));        
         Release(assistent2);
       }
       else if(percent <= 0.29){
@@ -163,6 +231,7 @@ class WrittenMessage : public Message {
   void Behavior(){
     cnt++;
     if(filingOfficer1.QueueLen() > filingOfficer2.QueueLen()){
+//      Print(Time);
       Seize(filingOfficer2);
 //      if(!isWorkingTime.Busy()){
       Wait(Exponential(4*60)); // prodleva mezi preposlanim asistentovi
@@ -171,7 +240,8 @@ class WrittenMessage : public Message {
 //      Print(Time);
       Message::Behavior();
 //      }
-    }else{
+    }else if(filingOfficer1.QueueLen() < filingOfficer2.QueueLen()){
+//      Print(Time);
       Seize(filingOfficer1);
 //    if(!isWorkingTime.Busy()){
 //      Print("\nprijem wrt: ");
@@ -182,6 +252,21 @@ class WrittenMessage : public Message {
 //      Print(Time);
       Message::Behavior();
 //    }
+    }
+    else{
+      if(Random()<0.50) {
+//        Print(Time);
+        Seize(filingOfficer2);
+        Wait(Exponential(4*60));
+        Release(filingOfficer2);
+      } else {
+//        Print(Time);
+        Seize(filingOfficer1);
+        Wait(Exponential(4*60));
+        Release(filingOfficer1);         
+      }
+//      Print("\nwrt Zpracovano v: ");
+//      Print(Time);
     }
   }
 };
@@ -198,7 +283,7 @@ class DataMessage : public Message {
 //      Print(Time);
       Message::Behavior();
 //      }
-    }else{
+    }else if(filingOfficer1.QueueLen() < filingOfficer2.QueueLen()){
 //      Print("\nprijem data: ");
 //      Print(Time);
       Seize(filingOfficer1);
@@ -211,6 +296,19 @@ class DataMessage : public Message {
 //      Print(Time);
       Message::Behavior();
 //    }
+    }
+    else{
+      if(Random()<0.50) {
+        Seize(filingOfficer2);
+        Wait(Exponential(4*60));
+        Release(filingOfficer2);
+      } else {
+        Seize(filingOfficer1);
+        Wait(Exponential(4*60));
+        Release(filingOfficer1);         
+      }
+//      Print("\ndata Zpracovano v: ");
+//      Print(Time);
     }
   }
 };
@@ -230,7 +328,7 @@ class ElectronicMessage : public Message {
 //      Print(Time);
       Message::Behavior();
 //    }
-    }else{
+    }else if(filingOfficer1.QueueLen() < filingOfficer2.QueueLen()){
 //    if(!isWorkingTime.Busy()){
 //      Print("\nprijem elect: ");
 //      Print(Time);
@@ -242,6 +340,19 @@ class ElectronicMessage : public Message {
 //      Print(Time);
       Message::Behavior();
 //    }
+    }
+    else{
+      if(Random()<0.50) {
+        Seize(filingOfficer2);
+        Wait(Exponential(5));
+        Release(filingOfficer2);
+      } else {
+        Seize(filingOfficer1);
+        Wait(Exponential(5));
+        Release(filingOfficer1);         
+      }
+//      Print("\n elect Zpracovano v: ");
+//      Print(Time);
     }
   }
 };
@@ -269,9 +380,10 @@ class GeneratorElMsg : public Event {
 
 int main(int argc, char **argv)
 {
-  Init(0,43829); // mesic behu
-//  Init(0,16*60); //10 hodin behu
+  Init(0,43829.1); // mesic behu
+//  Init(0,29*24*60); //10 hodin behu
 //  Init(0,7*24*60); // tyden behu
+//  Init(0,1051897.44);//2roky
 //  std::string ttrf;
   
 //  vicePresident ("fronta mistopredsedkyne");
