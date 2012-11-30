@@ -1,12 +1,12 @@
-
+/*
+ * OPTIMALIZACE: priorita u elektronicke posty - efektivnejsi vyuziti casu 
+ */
 #include <simlib.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
 #include <iostream> 
 
-#define rovnomerne
-Queue vicePresWork;
 
 //Store filingOffice("Podatelna", 2);   //pracovnici na podatelne
 Facility filingOfficer1("1. pracovnik na podatelne");
@@ -25,120 +25,35 @@ int soutez=0;
 int podpora=0;
 int eko=0;
 int rozh=0;
-//Queue qFilOffice; //fronta zpracovanych podnetu z podatelny
-//Queue officersQueue[5][8];
+int el=0;
+
 
 /**
  * Denni pracovni doba
  */
 
-#ifndef rovnomerne
+
 class WorkingTime : public Process{
   void Behavior(){
-    Priority=3;
+//    Priority=3;
     while(1){
       Wait(8*60); //pracovni doba 8hodin
       Seize(isWorkingTime,3);
-      /** POKUD BUDEME CHTIT ABY PRACOVNIK KROUTIL PRESCASY*/
-//      Seize(filingOfficer1); 
-//      Seize(filingOfficer2);
-      /** PRACOVNIK NESTIHNE VYRIDIT ZAKAZKU = BEHEM PRACE JE PRERUSEN *
-       * nesmi byt nastaveno Priority processu */
-      Seize(filingOfficer1,3); 
+      Seize(filingOfficer1,3);
       Seize(filingOfficer2,3);
-      /* ********************************/
-      Seize(vicePresident,3);
       Seize(assistent1,3);
       Seize(assistent2,3);
-      //for(int i=0;i<5;i++){
-      //  Seize(director[i],3);
-      //  Enter(officers[i],8);
-      //}
-      Wait(16*60); //nepracuje se
+      Seize(vicePresident,3);
+      Wait(16*60);//nepracuje se
       Release(isWorkingTime);
-      
       Release(filingOfficer1);
       Release(filingOfficer2);
-      Release(vicePresident);
       Release(assistent1);
       Release(assistent2);
-      //for(int i=0;i<5;i++){
-      //  Release(director[i]);
-      //  Leave(officers[i],8);
-      //}
+      Release(vicePresident);
     }
   }
 };
-#endif
-
-#ifdef rovnomerne
-class WorkingTime : public Process{
-  void Behavior(){
-    while(1){
-      if (Random()<0.50){
-        Priority=3;
-        Wait(8*60); //pracovni doba 8hodin
-        Seize(isWorkingTime,3);
-        /** PRACOVNIK NESTIHNE VYRIDIT ZAKAZKU = BEHEM PRACE JE PRERUSEN *
-         * nesmi byt nastaveno Priority processu */
-        Seize(filingOfficer1); 
-        Seize(filingOfficer2);
-        /* ********************************/
-        Seize(vicePresident,3);
-        Seize(assistent1,3);
-        Seize(assistent2,3);
-        //for(int i=0;i<5;i++){
-        //  Seize(director[i],3);
-        //  Enter(officers[i],8);
-        //}
-        Wait(16*60); //nepracuje se
-        Release(isWorkingTime);
-
-        Release(filingOfficer1);
-        Release(filingOfficer2);
-        Release(vicePresident);
-        Release(assistent1);
-        Release(assistent2);
-        //for(int i=0;i<5;i++){
-        //  Release(director[i]);
-        //  Leave(officers[i],8);
-        //}
-      }else{
-        Wait(8*60); //pracovni doba 8hodin
-        Seize(isWorkingTime,3);
-        /** POKUD BUDEME CHTIT ABY PRACOVNIK KROUTIL PRESCASY*/
-        Seize(filingOfficer1,3); 
-        Seize(filingOfficer2,3);
-        /** PRACOVNIK NESTIHNE VYRIDIT ZAKAZKU = BEHEM PRACE JE PRERUSEN *
-         * nesmi byt nastaveno Priority processu */
-//        Seize(filingOfficer1,3); 
-//        Seize(filingOfficer2,3);
-        /* ********************************/
-        Seize(vicePresident,3);
-        Seize(assistent1,3);
-        Seize(assistent2,3);
-        //for(int i=0;i<5;i++){
-        //  Seize(director[i],3);
-        //  Enter(officers[i],8);
-        //}
-        Wait(16*60); //nepracuje se
-        Release(isWorkingTime);
-
-        Release(filingOfficer1);
-        Release(filingOfficer2);
-        Release(vicePresident);
-        Release(assistent1);
-        Release(assistent2);
-        //for(int i=0;i<5;i++){
-        //  Release(director[i]);
-        //  Leave(officers[i],8);
-        //}
-      }
-    }
-  }
-};
-#endif
-
 
 class Message : public Process {
   protected:
@@ -230,130 +145,134 @@ class Message : public Process {
 class WrittenMessage : public Message {
   void Behavior(){
     cnt++;
-    if(filingOfficer1.QueueLen() > filingOfficer2.QueueLen()){
-//      Print(Time);
-      Seize(filingOfficer2);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(4*60)); // prodleva mezi preposlanim asistentovi
-      Release(filingOfficer2);
-//      Print("\nwrt Zpracovano v: ");
-//      Print(Time);
-      Message::Behavior();
-//      }
-    }else if(filingOfficer1.QueueLen() < filingOfficer2.QueueLen()){
-//      Print(Time);
+    if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
+//      Seize(isWorkingTime);
       Seize(filingOfficer1);
-//    if(!isWorkingTime.Busy()){
-//      Print("\nprijem wrt: ");
-//      Print(Time);
-      Wait(Exponential(4*60)); //doba zpracovani
+//      Release(isWorkingTime);
+//      if(!isWorkingTime.Busy()){
+      Wait(Exponential(4*60));
       Release(filingOfficer1);
-//      Print("\nwrt Zpracovano v: ");
-//      Print(Time);
-      Message::Behavior();
-//    }
-    }
-    else{
-      if(Random()<0.50) {
-//        Print(Time);
+//      }
+    }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
+//      Seize(isWorkingTime);
+      Seize(filingOfficer2);
+//      Release(isWorkingTime);
+//      if(!isWorkingTime.Busy()){
+      Wait(Exponential(4*60));
+      Release(filingOfficer2);
+//      }
+    }else{
+      if(Random()<0.50){
+//        Seize(isWorkingTime);
+        Seize(filingOfficer1);
+//        Release(isWorkingTime);
+//        if(!isWorkingTime.Busy()){
+        Wait(Exponential(4*60));
+        Release(filingOfficer1);
+//        }
+      }else{
+//        Seize(isWorkingTime);
         Seize(filingOfficer2);
+//        Release(isWorkingTime);
+//        if(!isWorkingTime.Busy()){
         Wait(Exponential(4*60));
         Release(filingOfficer2);
-      } else {
-//        Print(Time);
-        Seize(filingOfficer1);
-        Wait(Exponential(4*60));
-        Release(filingOfficer1);         
+//        }
       }
-//      Print("\nwrt Zpracovano v: ");
-//      Print(Time);
     }
+//    Print("posledni: %lf\n",Time);
+    Message::Behavior();
   }
 };
 
 class DataMessage : public Message {
   void Behavior(){
     cnt++;
-    if(filingOfficer1.QueueLen() > filingOfficer2.QueueLen()){
-      Seize(filingOfficer2);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(4*60)); // prodleva mezi preposlanim asistentovi
-      Release(filingOfficer2);
-//      Print("\ndata Zpracovano v: ");
-//      Print(Time);
-      Message::Behavior();
-//      }
-    }else if(filingOfficer1.QueueLen() < filingOfficer2.QueueLen()){
-//      Print("\nprijem data: ");
-//      Print(Time);
+    if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
+//      Seize(isWorkingTime);
       Seize(filingOfficer1);
-//    if(!isWorkingTime.Busy()){  
-//      Print("\nprijem data: ");
-//      Print(Time);
-      Wait(Exponential(4*60)); //doba zpracovani
-      Release(filingOfficer1);   
-//      Print("\ndata Zpracovano v: ");
-//      Print(Time);
-      Message::Behavior();
-//    }
-    }
-    else{
-      if(Random()<0.50) {
+//      Release(isWorkingTime);
+//      if(!isWorkingTime.Busy()){
+      Wait(Exponential(4*60));
+      Release(filingOfficer1);
+//      }
+    }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
+//      Seize(isWorkingTime);
+      Seize(filingOfficer2);
+//      Release(isWorkingTime);
+//      if(!isWorkingTime.Busy()){
+      Wait(Exponential(4*60));
+      Release(filingOfficer2);
+//      }
+    }else{
+      if(Random()<0.50){
+//        Seize(isWorkingTime);
+        Seize(filingOfficer1);
+//        Release(isWorkingTime);
+//        if(!isWorkingTime.Busy()){
+        Wait(Exponential(4*60));
+        Release(filingOfficer1);
+//        }
+      }else{
+//        Seize(isWorkingTime);
         Seize(filingOfficer2);
+//        Release(isWorkingTime);
+//        if(!isWorkingTime.Busy()){
         Wait(Exponential(4*60));
         Release(filingOfficer2);
-      } else {
-        Seize(filingOfficer1);
-        Wait(Exponential(4*60));
-        Release(filingOfficer1);         
+//        }
       }
-//      Print("\ndata Zpracovano v: ");
-//      Print(Time);
     }
+//    Print("posledni: %lf\n",Time);
+    Message::Behavior();
+    
   }
 };
 
 class ElectronicMessage : public Message {
   void Behavior(){
     cnt++;
- 
-//      Print("\nprijem elect: ");
-//      Print(Time);
-    if(filingOfficer1.QueueLen() > filingOfficer2.QueueLen()){
-      Seize(filingOfficer2);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(5)); // prodleva mezi preposlanim asistentovi
-      Release(filingOfficer2);
-//      Print("\n elect Zpracovano v: ");
-//      Print(Time);
-      Message::Behavior();
-//    }
-    }else if(filingOfficer1.QueueLen() < filingOfficer2.QueueLen()){
-//    if(!isWorkingTime.Busy()){
-//      Print("\nprijem elect: ");
-//      Print(Time);
+    el++;
+    Priority=2;
+    if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
+//      Seize(isWorkingTime);
       Seize(filingOfficer1);
+//      Release(isWorkingTime);
 //      if(!isWorkingTime.Busy()){
-      Wait(Exponential(5)); // prodleva mezi preposlanim asistentovi
+      Wait(Exponential(5));
       Release(filingOfficer1);
-//      Print("\n elect Zpracovano v: ");
-//      Print(Time);
-      Message::Behavior();
-//    }
-    }
-    else{
-      if(Random()<0.50) {
+//      }
+    }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
+//      Seize(isWorkingTime);
+      Seize(filingOfficer2);
+//      Release(isWorkingTime);
+//      if(!isWorkingTime.Busy()){
+      Wait(Exponential(5));
+      Release(filingOfficer2);
+//      }
+    }else{
+      if(Random()<0.50){
+//        Seize(isWorkingTime);
+        Seize(filingOfficer1);
+//        Release(isWorkingTime);
+//        if(!isWorkingTime.Busy()){
+        Wait(Exponential(5));
+        Release(filingOfficer1);
+//        }
+      }else{
+//        Seize(isWorkingTime);
         Seize(filingOfficer2);
+//        Release(isWorkingTime);
+//        if(!isWorkingTime.Busy()){
         Wait(Exponential(5));
         Release(filingOfficer2);
-      } else {
-        Seize(filingOfficer1);
-        Wait(Exponential(5));
-        Release(filingOfficer1);         
+//        }
       }
-//      Print("\n elect Zpracovano v: ");
-//      Print(Time);
     }
+//    Print("posledni: %lf\n",Time);
+    Priority=0;
+    Message::Behavior();
+ 
   }
 };
 
@@ -381,7 +300,7 @@ class GeneratorElMsg : public Event {
 int main(int argc, char **argv)
 {
   Init(0,43829.1); // mesic behu
-//  Init(0,29*24*60); //10 hodin behu
+//  Init(0,9*60); //10 hodin behu
 //  Init(0,7*24*60); // tyden behu
 //  Init(0,1051897.44);//2roky
 //  std::string ttrf;
@@ -423,6 +342,7 @@ int main(int argc, char **argv)
   filingOfficer1.Output();
   filingOfficer2.Output();
   Print("prichozich zprav: %d\n",cnt);
+  Print("prichozich elektronickych zprav: %d\n",el);
 //  assistent1.Output();
 //  assistent2.Output();
 //  vicePresident.Output();
