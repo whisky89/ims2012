@@ -7,18 +7,46 @@
 #include <sstream>
 #include <iostream> 
 
+// vstupni doba generatoru
+#define IN_ELECTRONIC 120
+#define IN_TEXT 84
+#define IN_DATA 108
 
-//Store filingOffice("Podatelna", 2);   //pracovnici na podatelne
-Facility filingOfficer1("1. pracovnik na podatelne");
-Facility filingOfficer2("2. pracovnik na podatelne");
+// zpracovani na podatelne
+#define PODATELNA_EL 5
+#define PODATELNA_TEXT 4 * 60
+#define PODATELNA_DATA 4 * 60
+
+// assistenti
+#define ASSISTENT_ZPRACOVANI 2 * 60
+#define ASSISTENT_ZALOZENI 2 * 60
+
+// pracovni doba
+#define DEN 8 * 60
+#define NOC 16 * 60
+
+// mistopredsedkyne
+#define MISTOP_CEKANI 4 * 24 * 60
+#define MISTOP_ZPRACOVANI 30  // upresnit
+
+// reditel odboru
+#define RED_ZPRACOVANI 30
+
+// referenti
+#define REF_ZPRACOVANI 21 * 24 * 60
+
+
+Facility podatelna1("1. pracovnik na podatelne");
+Facility podatelna2("2. pracovnik na podatelne");
 Facility assistent1("Asistent 1"); //prvni asistent ,queueAssisten1
 Facility assistent2("Asistent 2"); //druhy asistent ,queueAssisten2
-Facility vicePresident ("Mistopredsedkyne"); //
-Facility director[5]; //pocet reditelu - na kazdy odbor jeden
-Store officers[5]; //pocet oddeleni (pro kazde oddeleni 8 referentu)
+Facility mistopredsedkyne ("Mistopredsedkyne"); //
+Facility reditel[5]; //pocet reditelu - na kazdy odbor jeden
+Store referent[5]; //pocet oddeleni (pro kazde oddeleni 8 referentu)
 
 
-Facility isWorkingTime ("Je pracovni doba");
+Facility isWorkingTime ("Je pracovni doba"); // pracovni doba
+
 int cnt=0;
 int verejne=0;
 int soutez=0;
@@ -31,69 +59,60 @@ int el=0;
 /**
  * Denni pracovni doba
  */
-
-
 class WorkingTime : public Process{
   void Behavior(){
 //    Priority=3;
     while(1){
       Wait(8*60); //pracovni doba 8hodin
       Seize(isWorkingTime,3);
-      Seize(filingOfficer1,3);
-      Seize(filingOfficer2,3);
+      Seize(podatelna1,3);
+      Seize(podatelna2,3);
       Seize(assistent1,3);
       Seize(assistent2,3);
-      Seize(vicePresident,3);
+      Seize(mistopredsedkyne,3);
       Wait(16*60);//nepracuje se
       Release(isWorkingTime);
-      Release(filingOfficer1);
-      Release(filingOfficer2);
+      Release(podatelna1);
+      Release(podatelna2);
       Release(assistent1);
       Release(assistent2);
-      Release(vicePresident);
+      Release(mistopredsedkyne);
     }
   }
 };
 
+/**
+ * Rodicovska trida pro jednotlive typy zprav
+ */
 class Message : public Process {
   protected:
+    /**
+      * popis chovani zpracovani na podatelne
+      * @param waitTime - doba zpracovani zpavy
+      */
     void podatelnaBehavior(double waitTime){
-      if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
-  //      Seize(isWorkingTime);
-        Seize(filingOfficer1);
-  //      Release(isWorkingTime);
-  //      if(!isWorkingTime.Busy()){
+      // pro rovnomerne zatizeni pracovniku
+      if(podatelna1.QueueLen()<podatelna2.QueueLen()){
+        Seize(podatelna1);
         Wait(Exponential(waitTime));
-        Release(filingOfficer1);
-  //      }
-      }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
-  //      Seize(isWorkingTime);
-        Seize(filingOfficer2);
-  //      Release(isWorkingTime);
-  //      if(!isWorkingTime.Busy()){
+        Release(podatelna1);
+      } else if(podatelna1.QueueLen()>podatelna2.QueueLen()){
+        Seize(podatelna2);
         Wait(Exponential(waitTime));
-        Release(filingOfficer2);
-  //      }
+        Release(podatelna2);
       }else{
         if(Random()<0.50){
-  //        Seize(isWorkingTime);
-          Seize(filingOfficer1);
-  //        Release(isWorkingTime);
-  //        if(!isWorkingTime.Busy()){
+          Seize(podatelna1);
           Wait(Exponential(waitTime));
-          Release(filingOfficer1);
-  //        }
+          Release(podatelna1);
         }else{
-  //        Seize(isWorkingTime);
-          Seize(filingOfficer2);
-  //        Release(isWorkingTime);
-  //        if(!isWorkingTime.Busy()){
+          Seize(podatelna2);
           Wait(Exponential(waitTime));
-          Release(filingOfficer2);
-  //        }
+          Release(podatelna2);
         }
       }
     }
+    // popis zbytku chovani v systemu
     void Behavior(){
       double percent;
       if(assistent1.QueueLen() < assistent2.QueueLen()){
@@ -117,10 +136,13 @@ class Message : public Process {
           
         }
       }  
-      Seize(vicePresident);
+
+      Seize(mistopredsedkyne);
       Wait(5);
-      Release(vicePresident);
+      Release(mistopredsedkyne);
+      
       percent = Random();
+      
       if(percent <= 0.07){
         //Odbor druhostupnoveho rozhodovani 7%
         //rozh++;
@@ -240,29 +262,29 @@ int main(int argc, char **argv)
 //  Init(0,1051897.44);//2roky
 //  std::string ttrf;
   
-//  vicePresident ("fronta mistopredsedkyne");
+//  mistopredsedkyne ("fronta mistopredsedkyne");
 
-  director[0].SetName("Reditel verejnych zakazek");
-  director[1].SetName("Reditel hospodarske souteze");
-  director[2].SetName("Reditel ekonomickeho odboru");
-  director[3].SetName("Reditel verejne podpory");
-  director[4].SetName("Reditel odboru druhostupnoveho rozhodovani");
+  reditel[0].SetName("Reditel verejnych zakazek");
+  reditel[1].SetName("Reditel hospodarske souteze");
+  reditel[2].SetName("Reditel ekonomickeho odboru");
+  reditel[3].SetName("Reditel verejne podpory");
+  reditel[4].SetName("Reditel odboru druhostupnoveho rozhodovani");
   
-  officers[0].SetName("Referent verejnych zakazek"); 
-  officers[1].SetName("Referent hospodarske souteze");
-  officers[2].SetName("Referent ekonomickeho odboru");
-  officers[3].SetName("Referent verejne podpory");
-  officers[4].SetName("Referent odboru druhostupnoveho rozhodovani");
+  referent[0].SetName("Referent verejnych zakazek"); 
+  referent[1].SetName("Referent hospodarske souteze");
+  referent[2].SetName("Referent ekonomickeho odboru");
+  referent[3].SetName("Referent verejne podpory");
+  referent[4].SetName("Referent odboru druhostupnoveho rozhodovani");
   
 //  for(int i=0;i<5;i++){ //nastaveni kapacit referentu
-//    officers[i].SetCapacity(8);
+//    referent[i].SetCapacity(8);
 //    for(int j=0;j<8;j++){
-//      officers[i].SetQueue(officersQueue[i][j]);
+//      referent[i].SetQueue(referentQueue[i][j]);
 //      ttrf= "";
-//      ttrf.append(officers[i].Name());
+//      ttrf.append(referent[i].Name());
 //      ttrf.append(" c.");
 //      ttrf.append(1,(j+'0'));
-//      officersQueue[i][j].SetName(ttrf.c_str());
+//      referentQueue[i][j].SetName(ttrf.c_str());
 //    }
 //  }
   
@@ -274,17 +296,17 @@ int main(int argc, char **argv)
   Run();
   
   
-  filingOfficer1.Output();
-  filingOfficer2.Output();
+  podatelna1.Output();
+  podatelna2.Output();
   Print("prichozich zprav: %d\n",cnt);
   Print("prichozich elektronickych zprav: %d\n",el);
 //  assistent1.Output();
 //  assistent2.Output();
-//  vicePresident.Output();
+//  mistopredsedkyne.Output();
 
 
   
-//  officersQueue[1][1].Output();
+//  referentQueue[1][1].Output();
     
  // Print("verejne zakazky %d\n",verejne);
  // Print("hosp. soutez %d\n",soutez);
