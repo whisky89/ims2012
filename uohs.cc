@@ -57,6 +57,43 @@ class WorkingTime : public Process{
 
 class Message : public Process {
   protected:
+    void podatelnaBehavior(double waitTime){
+      if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
+  //      Seize(isWorkingTime);
+        Seize(filingOfficer1);
+  //      Release(isWorkingTime);
+  //      if(!isWorkingTime.Busy()){
+        Wait(Exponential(waitTime));
+        Release(filingOfficer1);
+  //      }
+      }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
+  //      Seize(isWorkingTime);
+        Seize(filingOfficer2);
+  //      Release(isWorkingTime);
+  //      if(!isWorkingTime.Busy()){
+        Wait(Exponential(waitTime));
+        Release(filingOfficer2);
+  //      }
+      }else{
+        if(Random()<0.50){
+  //        Seize(isWorkingTime);
+          Seize(filingOfficer1);
+  //        Release(isWorkingTime);
+  //        if(!isWorkingTime.Busy()){
+          Wait(Exponential(waitTime));
+          Release(filingOfficer1);
+  //        }
+        }else{
+  //        Seize(isWorkingTime);
+          Seize(filingOfficer2);
+  //        Release(isWorkingTime);
+  //        if(!isWorkingTime.Busy()){
+          Wait(Exponential(waitTime));
+          Release(filingOfficer2);
+  //        }
+        }
+      }
+    }
     void Behavior(){
       double percent;
       if(assistent1.QueueLen() < assistent2.QueueLen()){
@@ -145,41 +182,7 @@ class Message : public Process {
 class WrittenMessage : public Message {
   void Behavior(){
     cnt++;
-    if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
-//      Seize(isWorkingTime);
-      Seize(filingOfficer1);
-//      Release(isWorkingTime);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(4*60));
-      Release(filingOfficer1);
-//      }
-    }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
-//      Seize(isWorkingTime);
-      Seize(filingOfficer2);
-//      Release(isWorkingTime);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(4*60));
-      Release(filingOfficer2);
-//      }
-    }else{
-      if(Random()<0.50){
-//        Seize(isWorkingTime);
-        Seize(filingOfficer1);
-//        Release(isWorkingTime);
-//        if(!isWorkingTime.Busy()){
-        Wait(Exponential(4*60));
-        Release(filingOfficer1);
-//        }
-      }else{
-//        Seize(isWorkingTime);
-        Seize(filingOfficer2);
-//        Release(isWorkingTime);
-//        if(!isWorkingTime.Busy()){
-        Wait(Exponential(4*60));
-        Release(filingOfficer2);
-//        }
-      }
-    }
+    Message::podatelnaBehavior(60 * 4);
 //    Print("posledni: %lf\n",Time);
     Message::Behavior();
   }
@@ -188,41 +191,7 @@ class WrittenMessage : public Message {
 class DataMessage : public Message {
   void Behavior(){
     cnt++;
-    if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
-//      Seize(isWorkingTime);
-      Seize(filingOfficer1);
-//      Release(isWorkingTime);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(4*60));
-      Release(filingOfficer1);
-//      }
-    }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
-//      Seize(isWorkingTime);
-      Seize(filingOfficer2);
-//      Release(isWorkingTime);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(4*60));
-      Release(filingOfficer2);
-//      }
-    }else{
-      if(Random()<0.50){
-//        Seize(isWorkingTime);
-        Seize(filingOfficer1);
-//        Release(isWorkingTime);
-//        if(!isWorkingTime.Busy()){
-        Wait(Exponential(4*60));
-        Release(filingOfficer1);
-//        }
-      }else{
-//        Seize(isWorkingTime);
-        Seize(filingOfficer2);
-//        Release(isWorkingTime);
-//        if(!isWorkingTime.Busy()){
-        Wait(Exponential(4*60));
-        Release(filingOfficer2);
-//        }
-      }
-    }
+    Message::podatelnaBehavior(60 * 4);
 //    Print("posledni: %lf\n",Time);
     Message::Behavior();
     
@@ -234,41 +203,7 @@ class ElectronicMessage : public Message {
     cnt++;
     el++;
     Priority=2;
-    if(filingOfficer1.QueueLen()<filingOfficer2.QueueLen()){
-//      Seize(isWorkingTime);
-      Seize(filingOfficer1);
-//      Release(isWorkingTime);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(5));
-      Release(filingOfficer1);
-//      }
-    }else if(filingOfficer1.QueueLen()>filingOfficer2.QueueLen()){
-//      Seize(isWorkingTime);
-      Seize(filingOfficer2);
-//      Release(isWorkingTime);
-//      if(!isWorkingTime.Busy()){
-      Wait(Exponential(5));
-      Release(filingOfficer2);
-//      }
-    }else{
-      if(Random()<0.50){
-//        Seize(isWorkingTime);
-        Seize(filingOfficer1);
-//        Release(isWorkingTime);
-//        if(!isWorkingTime.Busy()){
-        Wait(Exponential(5));
-        Release(filingOfficer1);
-//        }
-      }else{
-//        Seize(isWorkingTime);
-        Seize(filingOfficer2);
-//        Release(isWorkingTime);
-//        if(!isWorkingTime.Busy()){
-        Wait(Exponential(5));
-        Release(filingOfficer2);
-//        }
-      }
-    }
+    Message::podatelnaBehavior(5);
 //    Print("posledni: %lf\n",Time);
     Priority=0;
     Message::Behavior();
